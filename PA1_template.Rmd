@@ -11,6 +11,11 @@ library(data.table)
 # Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
+
+1. Load the data (i.e. read.csv())
+
+2. Process/transform the data (convert text to date ).
+
 ```{r}
 dt <- read.csv(file="activity.csv" )
 dt$date_t <- as.Date(as.character(dt$date))
@@ -18,7 +23,10 @@ dtt <- as.data.table(dt)
 dtSummary <- dtt[, list(totalStepseachDay = sum(steps), num = .N), by = date_t]
 ```
 
-Histogram for total steps per dayl
+
+## What is mean total number of steps taken per day?
+
+[1]. Make a histogram of the total number of steps taken each day
 
 ```{r}
 hist(dtSummary$totalStepseachDay , main="histogram : total steps per day")
@@ -28,12 +36,13 @@ legend(x = "topright", c( "Mean", "Median"),col = c("blue",  "red"),lwd = c(2, 2
 
 ```
 
+[2]. Calculate and report the mean and median total number of steps taken per day
 
-## What is mean total number of steps taken per day?
-mean total number of steps taken per day :
+Mean total number of steps taken per day :
 ```{r}
 mean(dtSummary$totalStepseachDay , na.rm=TRUE)
 ```
+
 
 Median value : 
 ```{r}
@@ -43,10 +52,105 @@ median(dtSummary$totalStepseachDay , na.rm=TRUE)
 
 ## What is the average daily activity pattern?
 
+1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+
+```{r}
+dti <- dtt[, list(avg = mean(steps, na.rm=TRUE), num = .N), by = interval]
+with(dti , plot(x=interval, y=avg , ylab="average number of steps across all days", xlab="Interval(5 min.)", type="l"))
+
+```
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+  
+  5 Min. Intervel with maximum average number of steps.
+
+```{r}
+dti[avg==max(dti$avg), ]
+```
 
 ## Imputing missing values
 
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+Total # of Nas
+```{r}
+temp2 <- dtt[(is.na(dtt$steps)==TRUE)]
+length(temp2$steps)
+```
+or it can be found from last line of summary
+```{r}
+summary(dtt)
+```
+
+input average steps across days for given interval for missing data
+
+dt3$newSteps <-  ifelse(is.na(dt3$steps), dti[(dti$interval==dtt$interval)]$avg,dt3$steps)
 
 
-## Are there differences in activity patterns between weekdays and weekends?
+### inputting missing valuse 
+Defint a functio nto look for average number of steps across all day for given interval 
+
+```{r}
+getMean <- function(x){
+  dti[(dti$interval==x)]$avg
+}
+
+
+inputMissing <- function (df){
+  test <- numeric()
+  count = 0
+  for (i in 1:nrow(df))  {
+    row <- df[i,]
+    if(is.na(row$steps)){
+      test<-  rbind(test,getMean(row$interval))
+    }else{
+      test<-  rbind(test,row$steps)
+    }
+  }
+  test
+}
+
+tempDf <- dtt
+testV <- inputMissing(tempDf)
+tempDf$stepsNew <- testV
+```
+
+[4]. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+```{r}
+ dtSummaryFilledin <- tempDf[, list(totalStepseachDayFilledin = sum(stepsNew), num = .N), by = date_t]
+hist(dtSummaryFilledin$totalStepseachDayFilledin , main="histogram : total steps per day( Filled in values for NA)")
+abline(v= mean(dtSummaryFilledin$totalStepseachDayFilledin, na.rm=TRUE), col="blue", lwd=3)
+abline(v= median(dtSummaryFilledin$totalStepseachDayFilledin, na.rm=TRUE), col="red", lwd=1)
+legend(x = "topright", c( "Mean", "Median"),col = c("blue",  "red"),lwd = c(2, 2))
+```
+
+
+Mean total number of steps taken per day :
+```{r}
+mean(dtSummaryFilledin$totalStepseachDayFilledin , na.rm=TRUE)
+```
+
+
+Median value : 
+```{r}
+median(dtSummaryFilledin$totalStepseachDayFilledin , na.rm=TRUE)
+```
+
+
+## Are there differences in activity patterns between weedtSummarykdays and weekends?
+graphics with ggplot2
+```{r}
+library(ggplot2)
+temp5 <- transform (tempDf, Weekday = ifelse((weekdays(tempDf$date_t) == "Sunday" | weekdays(tempDf$date_t) == "Saturday"),"weekday","weekend"))
+temp6 <- transform (temp5, Weekday = factor(Weekday))
+
+qplot(interval,stepsNew,data=temp6, facets=Weekday~.,type="l", geom=c("line"))
+```
+
+graphics with lattice
+```{r}
+library(lattice)
+with(temp6,xyplot(stepsNew~interval|Weekday,layout=c(2,1), type="l"))
+```
+
