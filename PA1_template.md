@@ -230,28 +230,39 @@ median(dtSummaryFilledin$totalStepseachDayFilledin, na.rm = TRUE)
 
 
 
-## Are there differences in activity patterns between weedtSummarykdays and weekends?
-graphics with ggplot2
+## Are there differences in activity patterns between weeddays and weekends?
+
 
 ```r
-library(ggplot2)
+
 temp5 <- transform(tempDf, Weekday = ifelse((weekdays(tempDf$date_t) == "Sunday" | 
     weekdays(tempDf$date_t) == "Saturday"), "weekday", "weekend"))
 temp6 <- transform(temp5, Weekday = factor(Weekday))
-
-qplot(interval, stepsNew, data = temp6, facets = Weekday ~ ., type = "l", geom = c("line"))
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14.png) 
 
 
-graphics with lattice
+
+### graphics with lattice
+
 
 ```r
 library(lattice)
-with(temp6, xyplot(stepsNew ~ interval | Weekday, layout = c(2, 1), type = "l"))
+with(temp6, xyplot(stepsNew ~ interval | Weekday, layout = c(1, 2), type = "l"))
 ```
 
 ![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15.png) 
+
+
+
+### graphics with ggplot2
+
+
+```r
+library(ggplot2)
+qplot(interval, stepsNew, data = temp6, facets = Weekday ~ ., type = "l", geom = c("line"))
+```
+
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16.png) 
 
 
