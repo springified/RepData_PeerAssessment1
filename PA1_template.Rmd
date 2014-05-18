@@ -1,12 +1,44 @@
+Required packages. Below packages/libraries needs to be installed and loaded before you run this script.
+
+```{r echo=TRUE}
+install.packages("knitr")
+install.packages('ggplot2')
+install.packages('data.table')
+library(data.table)
+
+```
+
 # Reproducible Research: Peer Assessment 1
 
-
 ## Loading and preprocessing the data
+```{r}
+dt <- read.csv(file="activity.csv" )
+dt$date_t <- as.Date(as.character(dt$date))
+dtt <- as.data.table(dt)
+dtSummary <- dtt[, list(totalStepseachDay = sum(steps), num = .N), by = date_t]
+```
 
+Histogram for total steps per dayl
+
+```{r}
+hist(dtSummary$totalStepseachDay , main="histogram : total steps per day")
+abline(v= mean(dtSummary$totalStepseachDay, na.rm=TRUE), col="blue", lwd=3)
+abline(v= median(dtSummary$totalStepseachDay, na.rm=TRUE), col="red", lwd=1)
+legend(x = "topright", c( "Mean", "Median"),col = c("blue",  "red"),lwd = c(2, 2))
+
+```
 
 
 ## What is mean total number of steps taken per day?
+mean total number of steps taken per day :
+```{r}
+mean(dtSummary$totalStepseachDay , na.rm=TRUE)
+```
 
+Median value : 
+```{r}
+median(dtSummary$totalStepseachDay , na.rm=TRUE)
+```
 
 
 ## What is the average daily activity pattern?
